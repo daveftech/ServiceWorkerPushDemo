@@ -1,37 +1,46 @@
-﻿self.addEventListener('push', function (event) {
+﻿
+self.addEventListener('install', function (event) {
+    event.waitUntil(self.skipWaiting());
+});
 
-    // Handle redirecting focus to the correct tab
-    let windowClients = clients.matchAll({ includeUncontrolled: true, type: 'window' });
+self.addEventListener('activate', function (event) {
+    event.waitUntil(self.clients.claim());
+});
 
-    // Check if there is already a window/tab open with the target URL
-    let windowFound = false;
+self.addEventListener('push', function (event) {
+    event.waitUntil(
+        self.clients.matchAll().then(function (clientList) {
 
-    for (var i = 0; i < windowClients.length; i++) {
-        var client = windowClients[i];
-        // If so, just focus it.
-        if (client.url === 'http://localhost:56461/' && 'focus' in client) {
-            client.focus();
-            windowFound = true;
-            break;
-        }
-    }
+            var focused = clientList.some(function (client) {
+                return client.focused;
+            });
 
-    // If not, then open the target URL in a new window/tab.
-    if (!windowFound) {
-        clients.openWindow('http://localhost:56461/');
-    }
+            var notificationMessage;
+            if (focused) {
+                notificationMessage = 'You\'re still here, thanks!';
+            } else if (clientList.length > 0) {
+                notificationMessage = 'You haven\'t closed the page, ' +
+                    'click here to focus it!';
+            } else {
+                notificationMessage = 'You have closed the page, ' +
+                    'click here to re-open it!';
+            }
 
-    console.log('[Service Worker] Push Received.');
-    var data = event.data.json();
+            return self.registration.showNotification('ServiceWorker Cookbook', {
+                body: notificationMessage,
+            });
+        }));
+});
 
-    const title = data.Title;
-    const options = {
-        body: data.Message,
-        data: data.Url,
-        requireInteraction: true,
-        sticky: true
-    };
+self.addEventListener('notificationclick', function (event) {
+    event.waitUntil(
 
-    // Client isn't focused, we need to show a notification.
-    return self.registration.showNotification(title, options);
+        self.clients.matchAll().then(function (clientList) {
+
+            if (clientList.length > 0) {
+                return clientList[0].focus();
+            }
+
+            return self.clients.openWindow('../push-clients_demo.html');
+        }));
 });
