@@ -1,0 +1,21 @@
+<form class="container">
+  <div class="field">
+      <label for="Title">
+        Notification Title
+      </label>
+      <input type="text" id="Title" name="Title"  class="form-control" [(ngModel)]="Title"/>
+  </div>
+  <div class="field">
+      <label for="Message">
+      Message
+      </label>
+      <input type="text" id="Message" name="Message"  class="form-control" [(ngModel)]="Message"/>
+  </div>
+  <div class="field">
+      <label for="Url">
+        Url
+      </label>
+      <input type="text" id="Url" name="Url"  class="form-control" [(ngModel)]="Url"/>
+  </div>
+  <button (click)="Broadcast()">Broadcast</button>
+</form>
